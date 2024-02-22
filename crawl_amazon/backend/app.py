@@ -31,7 +31,7 @@ class ProductResult(db.Model):
         self.source = source
 
 
-class TrackProduct(db.Model):
+class TrackProducts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
     created_at = db.Column(db.DateTime, default=datetime.utcnow())
@@ -130,3 +130,35 @@ def start_scaper():
     return jsonify({'message': 'Scraper started successfully'}), 200
 
 
+@app.route('/add-tracked-product', methods=['POST'])
+def add_tracked_product():
+    name = request.json.get('name')
+    tracked_product = TrackProducts(name=name)
+    db.session.add(tracked_product)
+    db.session.commit()
+
+    response = {'message': 'Tracked product added successfully',
+                'id': tracked_product.id}
+    return jsonify(response), 200
+
+
+@app.route('/tracked-products', methods=['GET'])
+def get_tracked_products():
+    # db.session.query(TrackedProduct).all()
+    tracked_products = TrackProducts.query.all()
+
+    results = []
+    for product in tracked_products:
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'created_at': product.tracked
+        })
+
+    return jsonify(results), 200
+
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run()
